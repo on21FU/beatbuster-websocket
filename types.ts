@@ -6,6 +6,7 @@ export type GameState = {
         players: Player[],
         round: number
     },
+    trackIds: string[]
 }
 
 export type Player = UserInfo & {
@@ -33,6 +34,7 @@ const configurationSchema = z.object({
             amount: z.number()
         })
     ]),
+    accessToken: z.string()
 })
 
 export const userSchema = z.object({
@@ -47,7 +49,7 @@ export const joinMessageSchema = z.object({
 })
 
 
-const messageSchema = z.union([
+export const messageSchema = z.union([
     z.object({
         type: z.literal("join"),
         body: joinMessageSchema

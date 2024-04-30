@@ -1,6 +1,6 @@
 import SpotifyWebApi from "spotify-web-api-node";
 import { z } from "zod";
-import { joinMessageSchema, type GameState, type UserInfo } from "./types";
+import { joinMessageSchema, messageSchema, type Configuration, type GameState, type UserInfo } from "./types";
 
 
 const games = new Map<string, GameState | null>()
@@ -41,7 +41,7 @@ const server = Bun.serve<{ gameId: string, user: UserInfo }>({
             handleOpen(server.data)
         },
         message(server, msg) {
-            handleMessage(msg.toString());
+            handleMessage({ msg: msg.toString(), gameId: server.data.gameId, user: server.data.user });
             //console.log("Received message: " + msg.toString())
             // server.send("you said:" + msg.toString())
         },
@@ -51,16 +51,45 @@ const server = Bun.serve<{ gameId: string, user: UserInfo }>({
     }, port: 8080
 })
 
-function handleMessage(msg: string) {
+function handleMessage({ user, gameId, msg }: { user: UserInfo, gameId: string, msg: string }) {
     try {
         const data = JSON.parse(msg);
+        if (!validateMessageSchema(data)) {
+            console.log("Invalid message")
+            return
+        }
 
+        switch (data.type) {
+            case "start-game":
+                handleStartGame({ gameId, configuration: data.body });
+                break;
+
+            default:
+                break;
+        }
 
     } catch (error) {
         console.log("Error: ", error);
     }
+}
 
+function handleStartGame({ gameId, configuration }: { gameId: string, configuration: Configuration }) {
+    const game = games.get(gameId);
+    if(!game) {
+        console.log("No game found");
+        return
+    }
+    games.set(gameId, {...game, configuration})
+    startNextRound();
+    console.log(games.get(gameId))
+}
 
+function startNextRound(){
+
+}
+
+function validateMessageSchema(data: unknown): data is z.infer<typeof messageSchema> {
+    return messageSchema.safeParse(data).success;
 }
 
 function handleClose({ gameId, user }: { gameId: string, user: UserInfo }) {
@@ -88,8 +117,9 @@ function handleOpen({ gameId, user }: { gameId: string, user: UserInfo }) {
                     ...user,
                     score: 0
                 }],
-                round: 0
-            }
+                round: 1
+            },
+            trackIds: []
         })
         return
     }
