@@ -54,21 +54,12 @@ const server = Bun.serve<{ gameId: string, user: UserInfo }>({
 function handleMessage(msg: string) {
     try {
         const data = JSON.parse(msg);
-        
-        switch (msg.type) {
-            case value:
-                
-                break;
-        
-            default:
-                break;
-        }
 
 
     } catch (error) {
         console.log("Error: ", error);
     }
-    
+
 
 }
 

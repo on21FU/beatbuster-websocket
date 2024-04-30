@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export type GameState = {
-    configuration: Configuration,
+    configuration: Configuration | null,
     state: {
         players: Player[],
         round: number
@@ -14,27 +14,26 @@ export type Player = UserInfo & {
 
 export type UserInfo = z.infer<typeof userSchema>
 
-export type Configuration = {
-    playlist: Playlist,
-    roundTime: number,
-    winCondition: {
-        type: "rounds",
-        amount: number,
-    } | {
-        type: "score",
-        amount: number
-    }     
-}
+export type Configuration = z.infer<typeof configurationSchema>
 
 const configurationSchema = z.object({
-    
+    playlist: z.object({
+        id: z.string(),
+        imgUrl: z.string().optional(),
+        name: z.string()
+    }),
+    roundTime: z.number(),
+    winCondition: z.union([
+        z.object({
+            type: z.literal("rounds"),
+            amount: z.number()
+        }),
+        z.object({
+            type: z.literal("score"),
+            amount: z.number()
+        })
+    ]),
 })
-
-type Playlist = {
-    id: string,
-    imgUrl: string | undefined,
-    name: string
-}
 
 export const userSchema = z.object({
     username: z.string(),
@@ -47,6 +46,14 @@ export const joinMessageSchema = z.object({
     user: userSchema
 })
 
-const messageSchema = z.object({
-    type: z.union([z.literal("start-game"), z.literal("")]),
-})
+
+const messageSchema = z.union([
+    z.object({
+        type: z.literal("join"),
+        body: joinMessageSchema
+    }),
+    z.object({
+        type: z.literal("start-game"),
+        body: configurationSchema
+    })
+])
