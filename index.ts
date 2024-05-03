@@ -1,6 +1,9 @@
 import SpotifyWebApi from "spotify-web-api-node";
 import { z } from "zod";
-import { joinMessageSchema, messageSchema, type Configuration, type GameState, type UserInfo } from "./types";
+import { joinMessageSchema, messageSchema, type Configuration, type GameState, type RoundData, type UserInfo } from "./types";
+import type { ServerWebSocket } from "bun";
+import { getTrackIdsFromPlaylist } from "./spotify";
+import { shuffleArray } from "./helpers";
 
 
 const games = new Map<string, GameState | null>()
@@ -9,7 +12,9 @@ function parseJoinOptions(options: any): options is z.infer<typeof joinMessageSc
     return joinMessageSchema.safeParse(options).success
 }
 
-const server = Bun.serve<{ gameId: string, user: UserInfo }>({
+type WebSocketServerData = { gameId: string, user: UserInfo }
+
+const server = Bun.serve<WebSocketServerData>({
     fetch(req, server) {
         const url = new URL(req.url)
 
@@ -40,18 +45,20 @@ const server = Bun.serve<{ gameId: string, user: UserInfo }>({
         open(server) {
             handleOpen(server.data)
         },
-        message(server, msg) {
-            handleMessage({ msg: msg.toString(), gameId: server.data.gameId, user: server.data.user });
-            //console.log("Received message: " + msg.toString())
-            // server.send("you said:" + msg.toString())
+        async message(server, msg) {
+            await handleMessage({ msg: msg.toString(), server });
         },
         close(server) {
             handleClose(server.data)
         }
+
     }, port: 8080
 })
 
-function handleMessage({ user, gameId, msg }: { user: UserInfo, gameId: string, msg: string }) {
+async function handleMessage({ msg, server }: { msg: string, server: ServerWebSocket<WebSocketServerData> }) {
+
+    const { gameId, user } = server.data
+
     try {
         const data = JSON.parse(msg);
         if (!validateMessageSchema(data)) {
@@ -61,7 +68,8 @@ function handleMessage({ user, gameId, msg }: { user: UserInfo, gameId: string, 
 
         switch (data.type) {
             case "start-game":
-                handleStartGame({ gameId, configuration: data.body });
+                await handleStartGame({ gameId, configuration: data.body });
+                await startNextRound({ gameId, server });
                 break;
 
             default:
@@ -72,21 +80,51 @@ function handleMessage({ user, gameId, msg }: { user: UserInfo, gameId: string, 
         console.log("Error: ", error);
     }
 }
-
-function handleStartGame({ gameId, configuration }: { gameId: string, configuration: Configuration }) {
+async function startNextRound({ gameId, server }: { gameId: string, server: ServerWebSocket<WebSocketServerData> }) {
     const game = games.get(gameId);
-    if(!game) {
+    if (!game || !game.configuration) return
+
+    const roundData: RoundData = {
+        ...game.state,
+        trackId: game.trackIds[game.state.round - 1]
+    }
+
+    server.send(JSON.stringify(roundData))
+
+    games.set(gameId,
+        {
+            ...game,
+            state: { ...game.state, round: game.state.round + 1 }
+        })
+}
+
+async function handleStartGame({ gameId, configuration }: { gameId: string, configuration: Configuration }) {
+    const unconfiguredGame = games.get(gameId);
+    if (!unconfiguredGame) {
         console.log("No game found");
         return
     }
-    games.set(gameId, {...game, configuration})
-    startNextRound();
-    console.log(games.get(gameId))
+
+    games.set(gameId, { ...unconfiguredGame, configuration })
+    const game = games.get(gameId)
+
+    if (!game || !game.configuration) {
+        console.log("No configuration found")
+        return
+    }
+
+    const spotify = initializeSpotify(game.configuration.accessToken)
+    const playlistId = game.configuration.playlist.id
+    const trackIds = await getTrackIdsFromPlaylist({ spotify, playlistId })
+
+    console.log("gameId in handlEstartGame", gameId)
+
+    games.set(gameId, {
+        ...game,
+        trackIds: shuffleArray(trackIds)
+    })
 }
 
-function startNextRound(){
-
-}
 
 function validateMessageSchema(data: unknown): data is z.infer<typeof messageSchema> {
     return messageSchema.safeParse(data).success;
@@ -103,7 +141,6 @@ function handleClose({ gameId, user }: { gameId: string, user: UserInfo }) {
             players: game.state.players.filter(p => p.userId !== user.userId)
         },
     })
-    console.log(games.get(gameId))
 }
 
 function handleOpen({ gameId, user }: { gameId: string, user: UserInfo }) {

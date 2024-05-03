@@ -2,11 +2,17 @@ import { z } from "zod"
 
 export type GameState = {
     configuration: Configuration | null,
-    state: {
-        players: Player[],
-        round: number
-    },
+    state: State
     trackIds: string[]
+}
+
+export type State = {
+    players: Player[],
+    round: number
+}
+
+export type RoundData = State & {
+    trackId: string
 }
 
 export type Player = UserInfo & {
