@@ -57,8 +57,7 @@ export const joinMessageSchema = z.object({
 
 export const messageSchema = z.union([
     z.object({
-        type: z.literal("join"),
-        body: joinMessageSchema
+        type: z.literal("join-game")
     }),
     z.object({
         type: z.literal("start-game"),
