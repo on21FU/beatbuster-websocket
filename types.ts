@@ -12,7 +12,10 @@ export type State = {
 }
 
 export type RoundData = State & {
-    trackId: string
+    tracks: {
+        correctTrackId: string
+        wrongTrackIds: string[]
+    }
 }
 
 export type Player = UserInfo & {

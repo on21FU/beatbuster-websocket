@@ -35,9 +35,15 @@ export async function startNextRound({ gameId, client }: { gameId: string, clien
     const game = games.get(gameId);
     if (!game || !game.configuration) return
 
+    const correctTrackId = game.trackIds[game.state.round - 1]
+    const wrongTrackIds = getWrongTrackIds({ allTracks: game.trackIds, correctTrackId })
+
     const roundData: RoundData = {
         ...game.state,
-        trackId: game.trackIds[game.state.round - 1]
+        tracks: {
+            correctTrackId,
+            wrongTrackIds
+        }
     }
 
     server.publish(gameId, JSON.stringify({
@@ -50,4 +56,9 @@ export async function startNextRound({ gameId, client }: { gameId: string, clien
             ...game,
             state: { ...game.state, round: game.state.round + 1 }
         })
+}
+
+function getWrongTrackIds({ allTracks, correctTrackId }: { allTracks: string[], correctTrackId: string }) {
+    const availableTracks = allTracks.filter((currentTrackId) => currentTrackId !== correctTrackId)
+    return shuffleArray(availableTracks).splice(0, 3)
 }

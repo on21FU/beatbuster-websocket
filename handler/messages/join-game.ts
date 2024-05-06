@@ -13,7 +13,9 @@ export function sendPlayersToClient({ client }: { client: ServerWebSocket<WebSoc
 
     server.publish(gameId, JSON.stringify({
         type: "update-players",
-        body: game.state.players
+        body: {
+            players: game.state.players
+        }
     }))
 
 }
