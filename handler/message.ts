@@ -1,4 +1,4 @@
-import type { ServerWebSocket } from "bun";
+import type { Server, ServerWebSocket } from "bun";
 import { messageSchema } from "../types";
 import { handleStartGame, startNextRound } from "./messages/start-game";
 import type { WebSocketServerData } from "..";
@@ -6,7 +6,7 @@ import { sendPlayersToClient } from "./messages/join-game";
 import type { z } from "zod";
 import { handleAnswer } from "./messages/answer";
 
-export async function handleMessage({ msg, client }: { msg: string, client: ServerWebSocket<WebSocketServerData> }) {
+export async function handleMessage({ msg, client, server }: { msg: string, client: ServerWebSocket<WebSocketServerData>, server: Server }) {
 
     const { gameId, user } = client.data
 
@@ -28,7 +28,7 @@ export async function handleMessage({ msg, client }: { msg: string, client: Serv
                 break;
             case "answer":
                 console.log("answer")
-                handleAnswer({ gameId, answer: data.body })
+                handleAnswer({ gameId, answer: data.body, server })
                 break;
             default:
                 break;

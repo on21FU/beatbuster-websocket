@@ -43,7 +43,8 @@ export async function startNextRound({ gameId, client }: { gameId: string, clien
         tracks: {
             correctTrackId,
             wrongTrackIds
-        }
+        },
+        correctTrackId
     }
 
     server.publish(gameId, JSON.stringify({
@@ -54,7 +55,11 @@ export async function startNextRound({ gameId, client }: { gameId: string, clien
     games.set(gameId,
         {
             ...game,
-            state: { ...game.state, round: game.state.round + 1 }
+            state: {
+                ...game.state,
+                round: game.state.round + 1,
+                correctTrackId
+            }
         })
 }
 

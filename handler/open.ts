@@ -14,7 +14,9 @@ export function handleOpen(server: ServerWebSocket<WebSocketServerData>) {
                     ...user,
                     score: 0
                 }],
-                round: 1
+                round: 1,
+                correctTrackId: null,
+                answers: []
             },
             trackIds: []
         })

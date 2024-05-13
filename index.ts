@@ -46,7 +46,7 @@ export const server = Bun.serve<WebSocketServerData>({
             handleOpen(client)
         },
         async message(client, msg) {
-            await handleMessage({ msg: msg.toString(), client });
+            await handleMessage({ msg: msg.toString(), client, server });
         },
         close(client) {
             handleClose(client)

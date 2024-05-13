@@ -9,13 +9,15 @@ export type GameState = {
 export type State = {
     players: Player[],
     round: number,
-    answers: Answer[]
+    answers: Answer[],
+    correctTrackId: string | null
 }
 
 export type Answer = {
     userId: string
     trackId: string
-    timeToAnswer: number
+    timeToAnswer: number,
+    gainedScore?: number
 }
 
 export type RoundData = State & {
