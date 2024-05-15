@@ -1,12 +1,13 @@
 import type { Server, ServerWebSocket } from "bun";
 import { games, type WebSocketServerData } from "../..";
 import type { Answer } from "../../types";
+import { startNextRound } from "./start-game";
 
 export function handleAnswer({ gameId, answer, server }: { gameId: string, answer: Answer, server: Server }) {
     const game = games.get(gameId)
     if (!game || !game.configuration) return
     const roundTime = game.configuration.roundTime
-    const score = calculateScore({
+    const gainedScore = calculateScore({
         timeToAnswer: answer.timeToAnswer / 1000,
         correct: answer.trackId === game.state.correctTrackId,
         roundTime
@@ -19,12 +20,19 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
                 if (player.userId === answer.userId) {
                     return {
                         ...player,
-                        score: player.score + score
+                        score: player.score + gainedScore
                     }
                 }
                 return player
             }),
-            answers: [...game.state.answers, { ...answer, gainedScore: score }]
+            answers: [
+                ...game.state.answers,
+                {
+                    ...answer,
+                    gainedScore,
+                    timeToAnswer: answer.timeToAnswer / 1000
+                }
+            ]
         }
     })
     const updatedGame = games.get(gameId)
@@ -40,6 +48,32 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
         }
         server.publish(gameId, JSON.stringify(resultsForClient))
         console.log("Sending results", resultsForClient)
+
+        setTimeout(() => {
+
+            if (updatedGame.configuration?.winCondition.type === "score") {
+                updatedGame.state.players.forEach(player => {
+                    if (player.score >= updatedGame.configuration!.winCondition.amount) {
+                        return // end game
+                    }
+                })
+            }
+
+            const nextRound = updatedGame.state.round + 1
+            if (nextRound > updatedGame.configuration!.winCondition.amount) {
+                return // end game
+            }
+
+            games.set(gameId, {
+                ...updatedGame,
+                state: {
+                    ...updatedGame.state,
+                    answers: [],
+                }
+            })
+
+            startNextRound({ gameId })
+        }, 5000)
 
     }
 
