@@ -1,6 +1,6 @@
 import type { Server, ServerWebSocket } from "bun";
 import { games, type WebSocketServerData } from "../..";
-import type { Answer } from "../../types";
+import type { Answer, GameState, Player } from "../../types";
 import { startNextRound } from "./start-game";
 
 export function handleAnswer({ gameId, answer, server }: { gameId: string, answer: Answer, server: Server }) {
@@ -50,18 +50,9 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
         console.log("Sending results", resultsForClient)
 
         setTimeout(() => {
-
-            if (updatedGame.configuration?.winCondition.type === "score") {
-                updatedGame.state.players.forEach(player => {
-                    if (player.score >= updatedGame.configuration!.winCondition.amount) {
-                        return // end game
-                    }
-                })
-            }
-
-            const nextRound = updatedGame.state.round + 1
-            if (nextRound > updatedGame.configuration!.winCondition.amount) {
-                return // end game
+            if (isWinConditionFulfilled({ game: updatedGame })) {
+                server.publish(gameId, JSON.stringify(getGameResults(updatedGame.state)))
+                return
             }
 
             games.set(gameId, {
@@ -79,10 +70,31 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
 
 }
 
+function isWinConditionFulfilled({ game }: { game: GameState }) {
+    if (game.configuration?.winCondition.type === "score") {
+        game.state.players.forEach(player => {
+            return player.score >= game.configuration!.winCondition.amount
+        })
+    }
+
+    if (game.configuration?.winCondition.type === "rounds") {
+        return game.state.round > game.configuration!.winCondition.amount
+    }
+}
+
 function calculateScore({ timeToAnswer, correct, roundTime }: { timeToAnswer: number, correct: boolean, roundTime: number }) {
     if (!correct) return 0
     if (timeToAnswer > roundTime) return 0
     if (timeToAnswer === 0) return 1000
     console.log(timeToAnswer, roundTime)
     return Math.ceil((roundTime - timeToAnswer) * 100)
+}
+
+function getGameResults({ players }: { players: Player[] }) {
+    return {
+        type: "game-results",
+        body: {
+            players
+        }
+    }
 }
