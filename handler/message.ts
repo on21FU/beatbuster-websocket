@@ -8,7 +8,7 @@ import { handleAnswer } from "./messages/answer";
 
 export async function handleMessage({ msg, client, server }: { msg: string, client: ServerWebSocket<WebSocketServerData>, server: Server }) {
 
-    const { gameId, user } = client.data
+    const { gameId } = client.data
 
     try {
         const data = JSON.parse(msg);
@@ -20,7 +20,7 @@ export async function handleMessage({ msg, client, server }: { msg: string, clie
         switch (data.type) {
             case "start-game":
                 await handleStartGame({ gameId, configuration: data.body });
-                await startNextRound({ gameId, client });
+                await startNextRound({ gameId });
                 break;
             case "join-game":
                 console.log("join-game")

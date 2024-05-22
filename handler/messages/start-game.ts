@@ -31,7 +31,7 @@ export async function handleStartGame({ gameId, configuration }: { gameId: strin
     })
 }
 
-export async function startNextRound({ gameId, client }: { gameId: string, client: ServerWebSocket<WebSocketServerData> }) {
+export async function startNextRound({ gameId }: { gameId: string }) {
     const game = games.get(gameId);
     if (!game || !game.configuration) return
 
