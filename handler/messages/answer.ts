@@ -72,9 +72,11 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
 
 function isWinConditionFulfilled({ game }: { game: GameState }) {
     if (game.configuration?.winCondition.type === "score") {
-        game.state.players.forEach(player => {
+        const winConditionPerPlayer = game.state.players.map(player => {
+            console.log(player.score >= game.configuration!.winCondition.amount)
             return player.score >= game.configuration!.winCondition.amount
         })
+        return winConditionPerPlayer.includes(true)
     }
 
     if (game.configuration?.winCondition.type === "rounds") {
