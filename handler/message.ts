@@ -5,6 +5,7 @@ import type { WebSocketServerData } from "..";
 import { sendPlayersToClient } from "./messages/join-game";
 import type { z } from "zod";
 import { handleAnswer } from "./messages/answer";
+import { handleConfigUpdate } from "./messages/config-update";
 
 export async function handleMessage({ msg, client, server }: { msg: string, client: ServerWebSocket<WebSocketServerData>, server: Server }) {
 
@@ -24,12 +25,13 @@ export async function handleMessage({ msg, client, server }: { msg: string, clie
                 await startNextRound({ gameId });
                 break;
             case "join-game":
-                console.log("join-game")
                 sendPlayersToClient({ client })
                 break;
             case "answer":
-                console.log("answer")
                 handleAnswer({ gameId, answer: data.body, server })
+                break;
+            case "update-config":
+                handleConfigUpdate({ config: data.body, gameId });
                 break;
             default:
                 break;
