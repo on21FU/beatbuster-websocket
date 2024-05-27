@@ -43,7 +43,7 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
             body: {
                 correctTrackId: updatedGame.state.correctTrackId,
                 answers: updatedGame.state.answers,
-                players: updatedGame.state.players
+                players: updatedGame.state.players.sort((a, b) => b.score - a.score)
             }
         }
         server.publish(gameId, JSON.stringify(resultsForClient))
