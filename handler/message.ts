@@ -14,6 +14,7 @@ export async function handleMessage({ msg, client, server }: { msg: string, clie
         const data = JSON.parse(msg);
         if (!validateMessageSchema(data)) {
             console.log("Invalid message")
+            messageSchema.parse(data)
             return
         }
 
