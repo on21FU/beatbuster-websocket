@@ -35,6 +35,8 @@ export type UserInfo = z.infer<typeof userSchema>
 
 export type Configuration = z.infer<typeof configurationSchema>
 
+export type ConfigurationWithoutAccessToken = z.infer<typeof configurationSchemaWithoutAccessToken>
+
 const configurationSchema = z.object({
     playlist: z.object({
         id: z.string(),
@@ -54,6 +56,8 @@ const configurationSchema = z.object({
     ]),
     accessToken: z.string()
 })
+
+const configurationSchemaWithoutAccessToken = configurationSchema.omit({ accessToken: true })
 
 export const userSchema = z.object({
     username: z.string(),
@@ -84,5 +88,9 @@ export const messageSchema = z.union([
     z.object({
         type: z.literal("answer"),
         body: answerMessageSchema
+    }),
+    z.object({
+        type: z.literal("update-config"),
+        body: configurationSchemaWithoutAccessToken
     })
 ])
