@@ -23,8 +23,6 @@ export async function handleStartGame({ gameId, configuration }: { gameId: strin
     const playlistId = game.configuration.playlist.id
     const trackIds = await getTrackIdsFromPlaylist({ spotify, playlistId })
 
-    console.log("gameId in handlEstartGame", gameId)
-
     games.set(gameId, {
         ...game,
         trackIds: shuffleArray(trackIds)
@@ -35,7 +33,7 @@ export async function startNextRound({ gameId }: { gameId: string }) {
     const game = games.get(gameId);
     if (!game || !game.configuration) return
 
-    const correctTrackId = game.trackIds[game.state.round - 1]
+    const correctTrackId = game.trackIds[game.state.round]
     const wrongTrackIds = getWrongTrackIds({ allTracks: game.trackIds, correctTrackId })
 
     const roundData: RoundData = {
@@ -52,15 +50,14 @@ export async function startNextRound({ gameId }: { gameId: string }) {
         body: roundData
     }))
 
-    games.set(gameId,
-        {
-            ...game,
-            state: {
-                ...game.state,
-                round: game.state.round + 1,
-                correctTrackId
-            }
-        })
+    games.set(gameId, {
+        ...game,
+        state: {
+            ...game.state,
+            round: game.state.round + 1,
+            correctTrackId
+        }
+    })
 }
 
 function getWrongTrackIds({ allTracks, correctTrackId }: { allTracks: string[], correctTrackId: string }) {

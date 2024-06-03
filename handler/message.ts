@@ -6,6 +6,7 @@ import { sendPlayersToClient } from "./messages/join-game";
 import type { z } from "zod";
 import { handleAnswer } from "./messages/answer";
 import { handleConfigUpdate } from "./messages/config-update";
+import { handleRestartGame } from "./messages/restart-game";
 
 export async function handleMessage({ msg, client, server }: { msg: string, client: ServerWebSocket<WebSocketServerData>, server: Server }) {
 
@@ -32,6 +33,9 @@ export async function handleMessage({ msg, client, server }: { msg: string, clie
                 break;
             case "update-config":
                 handleConfigUpdate({ config: data.body, gameId });
+                break;
+            case "restart-game":
+                handleRestartGame({ gameId })
                 break;
             default:
                 break;
