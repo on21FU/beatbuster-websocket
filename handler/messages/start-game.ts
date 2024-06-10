@@ -25,7 +25,11 @@ export async function handleStartGame({ gameId, configuration }: { gameId: strin
 
     games.set(gameId, {
         ...game,
-        trackIds: shuffleArray(trackIds)
+        trackIds: shuffleArray(trackIds),
+        state: {
+            ...game.state,
+            round: 0,
+        }
     })
 }
 
@@ -42,7 +46,8 @@ export async function startNextRound({ gameId }: { gameId: string }) {
             correctTrackId,
             wrongTrackIds
         },
-        correctTrackId
+        correctTrackId,
+        round: game.state.round + 1
     }
 
     server.publish(gameId, JSON.stringify({

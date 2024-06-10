@@ -15,6 +15,7 @@ export function handleRestartGame({ gameId }: { gameId: string }) {
                 ...player,
                 score: 0
             })),
+            answers: []
         }
     }
 

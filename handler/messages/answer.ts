@@ -51,7 +51,12 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
 
         setTimeout(() => {
             if (isWinConditionFulfilled({ game: updatedGame })) {
-                server.publish(gameId, JSON.stringify(getGameResults(updatedGame.state)))
+                server.publish(gameId, JSON.stringify({
+                    type: "game-results",
+                    body: {
+                        players: updatedGame.state.players
+                    }
+                }))
                 return
             }
 
@@ -80,7 +85,7 @@ function isWinConditionFulfilled({ game }: { game: GameState }) {
     }
 
     if (game.configuration?.winCondition.type === "rounds") {
-        return game.state.round > game.configuration!.winCondition.amount
+        return game.state.round >= game.configuration!.winCondition.amount
     }
 }
 
@@ -90,13 +95,4 @@ function calculateScore({ timeToAnswer, correct, roundTime }: { timeToAnswer: nu
     if (timeToAnswer === 0) return 1000
     console.log(timeToAnswer, roundTime)
     return Math.ceil((roundTime - timeToAnswer) * 100)
-}
-
-function getGameResults({ players }: { players: Player[] }) {
-    return {
-        type: "game-results",
-        body: {
-            players
-        }
-    }
 }
