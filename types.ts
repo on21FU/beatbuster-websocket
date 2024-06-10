@@ -77,6 +77,7 @@ export const answerMessageSchema = z.object({
 })
 
 
+
 export const messageSchema = z.union([
     z.object({
         type: z.literal("join-game")
@@ -92,5 +93,8 @@ export const messageSchema = z.union([
     z.object({
         type: z.literal("update-config"),
         body: configurationSchemaWithoutAccessToken
+    }),
+    z.object({
+        type: z.literal("restart-game")
     })
 ])
