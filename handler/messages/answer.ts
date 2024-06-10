@@ -89,10 +89,12 @@ function isWinConditionFulfilled({ game }: { game: GameState }) {
     }
 }
 
-function calculateScore({ timeToAnswer, correct, roundTime }: { timeToAnswer: number, correct: boolean, roundTime: number }) {
+export function calculateScore({ timeToAnswer, correct, roundTime }: { timeToAnswer: number, correct: boolean, roundTime: number }) {
     if (!correct) return 0
     if (timeToAnswer > roundTime) return 0
-    if (timeToAnswer === 0) return 1000
-    console.log(timeToAnswer, roundTime)
-    return Math.ceil((roundTime - timeToAnswer) * 100)
+    if (timeToAnswer < 1) return 1000
+    const score = 10 * (100 * Math.E ** (-timeToAnswer / 10))
+    console.log(score, timeToAnswer, roundTime)
+    if (score > 1000) return 1000
+    return Math.round(score)
 }
