@@ -7,20 +7,7 @@ export function handleOpen(server: ServerWebSocket<WebSocketServerData>) {
     server.subscribe(gameId)
     const game = games.get(gameId)
     if (!game) {
-        games.set(gameId, {
-            configuration: null,
-            state: {
-                players: [{
-                    ...user,
-                    score: 0
-                }],
-                round: 1,
-                correctTrackId: null,
-                answers: []
-            },
-            trackIds: []
-        })
-        return
+        throw new Error("Game not found") // throw Error to redirect the user to 404
     }
     game.state.players.push({
         ...user,
