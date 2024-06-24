@@ -7,6 +7,7 @@ import type { z } from "zod";
 import { handleAnswer } from "./messages/answer";
 import { handleConfigUpdate } from "./messages/config-update";
 import { handleRestartGame } from "./messages/restart-game";
+import handleReady from "./messages/ready";
 
 export async function handleMessage({ msg, client, server }: { msg: string, client: ServerWebSocket<WebSocketServerData>, server: Server }) {
 
@@ -37,10 +38,12 @@ export async function handleMessage({ msg, client, server }: { msg: string, clie
             case "restart-game":
                 handleRestartGame({ gameId })
                 break;
+            case "ready":
+                handleReady({ gameId, userId: client.data.user.userId });
+                break;
             default:
                 break;
         }
-
     } catch (error) {
         console.log("Error: ", error);
     }
