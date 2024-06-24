@@ -27,6 +27,7 @@ export const server = Bun.serve<WebSocketServerData>({
         "Access-Control-Allow-Methods",
         "GET, POST, PUT, DELETE, OPTIONS"
       );
+      console.log("/health was called")
       return res;
     }
 
