@@ -12,7 +12,8 @@ export function handleOpen(server: ServerWebSocket<WebSocketServerData>) {
             state: {
                 players: [{
                     ...user,
-                    score: 0
+                    score: 0,
+                    isReady: false
                 }],
                 round: 1,
                 correctTrackId: null,
@@ -24,7 +25,8 @@ export function handleOpen(server: ServerWebSocket<WebSocketServerData>) {
     }
     game.state.players.push({
         ...user,
-        score: 0
+        score: 0,
+        isReady: false
     })
 
     console.log(gameId, game.state.players)

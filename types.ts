@@ -28,7 +28,8 @@ export type RoundData = State & {
 }
 
 export type Player = UserInfo & {
-    score: number
+    score: number,
+    isReady: boolean
 }
 
 export type UserInfo = z.infer<typeof userSchema>
