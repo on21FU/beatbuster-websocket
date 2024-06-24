@@ -28,7 +28,8 @@ export type RoundData = State & {
 }
 
 export type Player = UserInfo & {
-    score: number
+    score: number,
+    isReady: boolean
 }
 
 export type UserInfo = z.infer<typeof userSchema>
@@ -96,5 +97,8 @@ export const messageSchema = z.union([
     }),
     z.object({
         type: z.literal("restart-game")
+    }),
+    z.object({
+        type: z.literal("ready")
     })
 ])

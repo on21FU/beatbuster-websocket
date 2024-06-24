@@ -5,54 +5,64 @@ import { handleOpen } from "./handler/open";
 import { handleMessage } from "./handler/message";
 import { handleClose } from "./handler/close";
 
+export const games = new Map<string, GameState | null>();
 
-export const games = new Map<string, GameState | null>()
-
-function parseJoinOptions(options: any): options is z.infer<typeof joinMessageSchema> {
-    return joinMessageSchema.safeParse(options).success
+function parseJoinOptions(
+  options: any
+): options is z.infer<typeof joinMessageSchema> {
+  return joinMessageSchema.safeParse(options).success;
 }
 
-export type WebSocketServerData = { gameId: string, user: UserInfo }
+export type WebSocketServerData = { gameId: string; user: UserInfo };
 
 export const server = Bun.serve<WebSocketServerData>({
-    fetch(req, server) {
-        const url = new URL(req.url)
+  fetch(req, server) {
+    const url = new URL(req.url);
 
-        if (url.pathname === "/join") return handleJoin(url)
+    if (url.pathname === "/join") return handleJoin(url);
+    if (url.pathname === "/health") {
+      const res = new Response("OK", { status: 200 });
+      res.headers.set("Access-Control-Allow-Origin", "*");
+      res.headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, OPTIONS"
+      )
+      return res;
+    }
 
-        const optionsString = url.searchParams.get("options")
-        const options = optionsString ? JSON.parse(optionsString) : {}
+    const optionsString = url.searchParams.get("options");
+    const options = optionsString ? JSON.parse(optionsString) : {};
 
-        if (!parseJoinOptions(options)) {
-            console.log("Failed to parse")
-            return new Response("Invalid options", { status: 400 })
-        }
-        const { gameId, user } = options
+    if (!parseJoinOptions(options)) {
+      console.log("Failed to parse");
+      return new Response("Invalid options", { status: 400 });
+    }
+    const { gameId, user } = options;
 
-        const success = server.upgrade(req, {
-            data: {
-                gameId,
-                user
-            }
-        })
+    const success = server.upgrade(req, {
+      data: {
+        gameId,
+        user,
+      },
+    });
 
-        if (success) {
-            return
-        }
-        return new Response("Could not upgrade connection")
+    if (success) {
+      return;
+    }
+    return new Response("Could not upgrade connection");
+  },
+  websocket: {
+    open(client) {
+      handleOpen(client);
     },
-    websocket: {
-        open(client) {
-            handleOpen(client)
-        },
-        async message(client, msg) {
-            await handleMessage({ msg: msg.toString(), client, server });
-        },
-        close(client) {
-            handleClose(client)
-        }
+    async message(client, msg) {
+      await handleMessage({ msg: msg.toString(), client, server });
+    },
+    close(client) {
+      handleClose(client);
+    },
+  },
+  port: 8080,
+});
 
-    }, port: 8080
-})
-
-console.log("Server running on port " + server.port)
+console.log("Server running on port " + server.port);
