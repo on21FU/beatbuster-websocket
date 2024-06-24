@@ -96,5 +96,8 @@ export const messageSchema = z.union([
     }),
     z.object({
         type: z.literal("restart-game")
+    }),
+    z.object({
+        type: z.literal("ready")
     })
 ])
