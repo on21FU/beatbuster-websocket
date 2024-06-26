@@ -3,7 +3,6 @@ import { type WebSocketServerData, games, server } from ".."
 
 export function handleClose(client: ServerWebSocket<WebSocketServerData>) {
     const { gameId, user } = client.data
-    console.log("leaving...")
     const game = games.get(gameId)
     if (!game) return
 
@@ -19,11 +18,13 @@ export function handleClose(client: ServerWebSocket<WebSocketServerData>) {
             players: game.state.players.filter(p => p.userId !== user.userId)
         },
     })
+    const updatedGame = games.get(gameId)
 
+    if (!updatedGame) return
 
     server.publish(gameId, JSON.stringify({
         type: "update-players",
-        body: game.state.players
+        body: updatedGame.state.players
     }))
 
 
