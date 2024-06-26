@@ -38,18 +38,16 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
     const updatedGame = games.get(gameId)
     if (!updatedGame) return
     if (updatedGame.state.answers.length === updatedGame.state.players.length) {
-        setTimeout(() => {
-            const resultsForClient = {
-                type: "round-results",
-                body: {
-                    correctTrackId: updatedGame.state.correctTrackId,
-                    answers: updatedGame.state.answers,
-                    players: updatedGame.state.players.sort((a, b) => b.score - a.score)
-                }
+
+        const resultsForClient = {
+            type: "round-results",
+            body: {
+                correctTrackId: updatedGame.state.correctTrackId,
+                answers: updatedGame.state.answers,
+                players: updatedGame.state.players.sort((a, b) => b.score - a.score)
             }
-            server.publish(gameId, JSON.stringify(resultsForClient))
-            console.log("Sending results", resultsForClient)
-        }, 2000)
+        }
+        server.publish(gameId, JSON.stringify(resultsForClient))
 
         setTimeout(() => {
             if (isWinConditionFulfilled({ game: updatedGame })) {
@@ -71,7 +69,7 @@ export function handleAnswer({ gameId, answer, server }: { gameId: string, answe
             })
 
             startNextRound({ gameId })
-        }, 7200)
+        }, 5200)
 
     }
 
